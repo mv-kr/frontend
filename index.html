@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>HormoneBayes Analysis Tool (v__VERSION__)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  </head>
+  <body>
+    <div id="button-panel">
+      <h2> </h2>
+      <button id="start-analysis" data-tooltip="Start the analysis. Data and settings must be loaded first. Once the analysis has finished outputs will be saved in the 'out' folder">Start</button>
+      <button id="stop-analysis" data-tooltip="Stop the ongoing analysis." disabled>Stop</button>
+      <button id="exit-app" data-tooltip="Exit the application.">Exit</button>
+    </div>
+    <div id="content-panel">
+      <div id="tabs">
+        <div class="tab active" data-tab="data">Data</div>
+        <div class="tab" data-tab="settings">Settings</div>
+        <div class="tab" data-tab="log">Log</div>
+        <div class="tab" data-tab="results">Results</div>
+      </div>
+      <div id="data" class="tab-content active">
+        <h2>Data</h2>
+        <div class="table-container">
+        <table id="data-table">     
+          <tbody></tbody>
+        </table>
+        </div>
+        <div id="button-container">
+          <button id="load-data" data-tooltip="Select a CSV file containing the data to be analyzed. Each dataset should consist of two rows: the first row for measurement times and the second row for the corresponding measurements. Multiple datasets, each in this two-row format, may be included within the same file and will be processed sequencially.">Load Data</button>
+        </div>
+        <div class="button-row2">  
+          * A file containing the data will be saved in the <a id="app-data-folder-label" style="cursor: pointer; text-decoration: underline;"></a> folder.
+        </div>
+      </div>
+      <div id="settings" class="tab-content">
+        <h2>Settings</h2>
+        <div id="settings-container"></div>
+        <button id="load-settings" data-tooltip="Load settings from a settings file.">Load Settings</button>
+        <button id="save-settings" data-tooltip="Save any changes to the settings file.">Save Settings</button>
+      
+        <div class="button-row2">  
+          * The settings file will be saved in the <a id="app-settings-folder-label" style="cursor: pointer; text-decoration: underline;"></a> folder. You can edit this file before starting the analysis.
+        </div>
+      </div>
+      <div id="log" class="tab-content">
+        <div id="log-panel"></div>
+      </div>
+      <div id="results" class="tab-content">
+        <h2>Generate report</h2>
+        <div id="results-input">
+          <div class="input-row">
+            <label for="results-string">Job ID:</label>
+            <select id="results-string">
+                <option value="">Select Job ID</option> <!-- Placeholder option -->
+            </select>
+            <!-- <input type="text" id="results-string" placeholder="Job id"> -->
+          </div>
+          <div class="input-row">
+            <label for="results-noid">Dataset Index:</label>
+            <input type="text" id="results-noid" placeholder="Dataset index">
+          </div>
+          <div class="input-row">
+            <label for="results-output">Output folder:</label>
+            <input type="text" id="results-output" placeholder="Output folder">
+            <button id="find-output-folder" data-tooltip="Select the folder where the analysis summary, including parameter estimates and pulse timings, will be saved.">Select Folder</button>
+          </div>
+          <div class="input-row">
+            <label for="results-threshold">Threshold:</label>
+            <input type="text" id="results-threshold" placeholder="Probability thershold for identifying pulses." value="0.5">
+          </div>
+          <div class="input-row">
+            <label for="results-burn-in">Burn-in (%):</label>
+            <input type="text" id="results-burn-in" placeholder="Percentage of the chain that will be excluded from analysis." value="10">
+          </div>
+          <div class="button-row">
+            <button id="load-results" data-tooltip="Generate a summary of the analysis for a specific job. The app will search for analysis files in the results folder and compile a summary of the inferred parameters and pulse timings. This summary will also be saved in the output folder chosen by the user.">View Results</button>
+          </div>
+          <div class="button-row2">  
+            * The app searches for analysis files in the <a  id="app-folder-label" style="cursor: pointer; text-decoration: underline;"></a> folder, where all new analysis files are saved by default. To view results from a previous analysis, please copy those files into this folder.
+          </div>
+        </div>
+        <ul id="file-list"></ul>
+        <h3>Model output</h3>
+        <div class="plot-container">
+          <canvas id="lh-chart"></canvas>
+          <button class="download-plot" data-canvas-id="lh-chart" style="display: block;"> 
+            <i class="fas fa-download"></i>
+          </button>
+        </div>
+        <div class="plot-container">
+          <canvas id="gen-chart"></canvas>
+          <button class="download-plot" data-canvas-id="gen-chart" style="display: block;">
+            <i class="fas fa-download"></i>
+          </button>
+        </div>
+        <h3>Model Likelihood</h3>
+        <div class="plot-container">
+          <canvas id="pooled-chart"></canvas>
+          <button class="download-plot" data-canvas-id="pooled-chart" style="display: block;">
+            <i class="fas fa-download"></i>
+          </button>
+        </div>
+        <h3>Model Parameters</h3>
+        <div id="charts-container"></div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/2.1.0/chartjs-plugin-annotation.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

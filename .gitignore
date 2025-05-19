@@ -1,0 +1,14 @@
+build
+node_modules
+DS_Store
+*.DS_Store
+*.log
+*.tgz
+*.zip
+*.tar.gz
+*.tar
+*.gz
+*.tgz
+*.zip
+*.log
+/out/*
