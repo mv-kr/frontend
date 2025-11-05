@@ -12,12 +12,12 @@
 #include "basic_algorthm.hpp"
 #include "basic_model.hpp"
 #include "stochastic.hpp"
-
+#include <Eigen/Dense>
 
 
 #include <cmath>
 #include <map>
-#include <Eigen/Dense>
+
 
 
 
@@ -61,6 +61,9 @@ namespace mci {
             /** run the algorithm and store results in res **/
             const void run_2(const mci::trajectory_t& ref_traj, mci::trajectory_t& res_traj) ;
             
+            const std::vector<Eigen::MatrixXd> run_pop(const trajectory_t& ref_traj,
+                                                                const unsigned int pop_size,
+                                                                const unsigned int sample_size);
             
         };
         

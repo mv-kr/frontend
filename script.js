@@ -1,4 +1,3 @@
-
 // Ensure the DOM is fully loaded before accessing elements
 let data = [];
 let currentChart = null; 
@@ -9,12 +8,14 @@ let uniqueNames = new Map();
 // Define the settings to display and their descriptive labels
 const settingsToDisplay = {
   'general': ['identifier_str', 'threads_no', 'chain_repeats', 'seed'],
-  'MCMC_gibbs_sMMALA': ['iterations', 'iter_adapt']
+  'MCMC_gibbs_sMMALA': ['iterations', 'iter_adapt'],
+  'shMCMC_gibbs_sMMALA': ['iterations','adapt_runs']
 };
 
 const groupLabels = {
   'general': 'General Settings',
-  'MCMC_gibbs_sMMALA': 'MCMC Settings'
+  'MCMC_gibbs_sMMALA': 'MCMC Settings',
+  'shMCMC_gibbs_sMMALA': 'short MCMC'
 };
 
 const settingLabels = {
@@ -27,6 +28,10 @@ const settingLabels = {
   'MCMC_gibbs_sMMALA': {
     'iterations': 'Number of Iterations',
     'iter_adapt': 'Adaptation Period Iterations'
+  },
+  'shMCMC_gibbs_sMMALA': {
+    'iterations': 'Number of Iterations',
+    'adapt_runs': 'Number of Adaptation Runs'
   }
 };
 
@@ -273,11 +278,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (loadResultsButton) {
     loadResultsButton.addEventListener('click', async () => {
       const inputString = resultsStringInput.value.trim() + '_' + resultsNoIdInput.value.trim();
-      dataset_id = +resultsNoIdInput.value.trim();
+      dataset_id = resultsNoIdInput.value.trim();
       //const res = inputString.split('_');
       //dataset_id = +res[res.length-1];
       const tString = 'lik';
       if (inputString && dataset_id) {
+        
         try {
           
           //const files = await window.electron.ipcRenderer.invoke('load-result-files', inputString);
@@ -308,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
           alert('An error was encountered while generating the report. Please ensure you are using a valid Job ID and dataset index.');
         }
       } else {
-        alert('Please enter a jod identifier and dataset id before loading results.');
+        alert('Please enter a jod identifier and dataset id before loading results.'+inputString + '--'+dataset_id  );
       }
     });
   }
@@ -330,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
       data = await window.electron.ipcRenderer.invoke('load-data');
       const tableBody = document.getElementById('data-table').querySelector('tbody');
       tableBody.innerHTML = ''; // Clear existing data
-      
+      console.log('Loaded data:', data);
       data.forEach((row, index) => {
         const tr = document.createElement('tr');
         const labelTd = document.createElement('td');
@@ -528,16 +534,30 @@ async function plotTrajectoryData(files, inputString) {
         LHvals.push(max -min);
       }
 
-      
+
       let i = 0;
       let timesData2 = [];
       let LHData = [];
+     ;
+
       if (dataset_id !== null && data !== null && data.length > 0) {
-        i = dataset_id;
-        // We'll update these variables instead of redeclaring them
-        timesData2 = data[(i-1)*2];
-        LHData = data[(i-1)*2+1];
-      } 
+        const requestedRaw = String(dataset_id ?? '').trim();
+        // filter rows whose first column matches dataset_id (robust compare)
+        const matchedRows = data.filter(row => {
+          const firstRaw = row[0];
+          return firstRaw === requestedRaw;
+        });
+
+        if (matchedRows.length >= 2) {
+          timesData2 = matchedRows[0];
+          LHData    = matchedRows[1];
+        }
+        
+        
+ 
+      }
+
+      
       // Plot the data
       plotAverageData('gen-chart', timeData[0], avgGenData, 'Hypothalamic drive',[],[], []);
       plotAverageData('lh-chart', timeData[0], avgLHData, 'LH', crossingTimes, timesData2, LHData);
@@ -872,67 +892,56 @@ window.electron.getAppVersion().then(version => {
 
 
 
-document.getElementById('results-string').addEventListener('click', async () => {
+// Replace the click handler with mousedown and a guard to avoid rebuilding repeatedly
+document.getElementById('results-string').addEventListener('pointerdown', async (e) => {
   const dropdown = document.getElementById('results-string');
   const folder = document.getElementById('app-folder-label');
-  dropdown.innerHTML = ''; // Clear existing options
-
-  // Add a placeholder option
-  const placeholderOption = document.createElement('option');
-  placeholderOption.value = '';
-  placeholderOption.textContent = 'Select Job ID';
-  dropdown.appendChild(placeholderOption);
 
   try {
-    
-      // Read the contents of the 'out/' directory
-      const files  = await window.electron.ipcRenderer.invoke('read-outputs', folder.textContent);
-      
-      // Use a Set to track unique display names
-      
-      uniqueNames = new Map();
-      // Populate the dropdown with the filenames
-      files.forEach(file => {
-          // Exclude files and folders that start with a dot
-          if (!file.endsWith('.csv') ) {
-              return; // Skip this iteration
-          }
+    const files = await window.electron.ipcRenderer.invoke('read-outputs', folder.textContent);
+    const fileKey = files.join('\n');
 
-          // Extract the part of the filename up to the 4th underscore from the end
-          const parts = file.split('_'); // Split the filename by underscores
-          let displayName;
+    // If file list unchanged and dropdown already populated, just open it
+    if (dropdown.dataset._files === fileKey && dropdown.options.length > 1) {
+      dropdown.focus();
+      return;
+    }
 
-          if (parts.length > 4) {
-              // Join the first (length - 4) parts and add the last 4 parts
-              displayName = parts.slice(0, parts.length - 4).join('_');
-          } else {
-              // If there are less than 4 underscores, display the full filename
-              displayName = file;
-          }
+    // cache file list
+    dropdown.dataset._files = fileKey;
 
-           // Add the display name to the Set to ensure uniqueness
-          let revised_dataset_list = uniqueNames.get(displayName)
-          if (revised_dataset_list == null) {
-            revised_dataset_list = new Array(parts[parts.length - 4]);
-          } else {
-            revised_dataset_list.push(parts[parts.length - 4])
-          }
-          console.log(`${displayName} --> ${revised_dataset_list}`);
-          uniqueNames.set(displayName, revised_dataset_list);
-          
-      });
+    // build options before the native menu opens
+    dropdown.innerHTML = '';
+    const placeholderOption = document.createElement('option');
+    placeholderOption.value = '';
+    placeholderOption.textContent = 'Select Job ID';
+    placeholderOption.disabled = true;
+    placeholderOption.selected = true;
+    dropdown.appendChild(placeholderOption);
 
-      // Add unique names to the dropdown
-      uniqueNames.forEach((value, key) => {
-          const se = new Set(value);
-          const option = document.createElement('option');
-          option.value = key; // Set the value to the display name
-          option.textContent = `${key} (${se.size} datasets)`; // Display the processed filename
-          dropdown.appendChild(option);
-      });
+    const uniqueNames = new Map();
+    files.forEach(file => {
+      if (!file.endsWith('.csv')) return;
+      const parts = file.split('_');
+      const displayName = parts.length > 4 ? parts.slice(0, parts.length - 4).join('_') : file;
+      const datasetIndex = parts[Math.max(0, parts.length - 4)];
+      const list = uniqueNames.get(displayName) || [];
+      list.push(datasetIndex);
+      uniqueNames.set(displayName, list);
+    });
 
-  } catch (error) {
-      console.error('Error reading directory:', error);
+    uniqueNames.forEach((value, key) => {
+      const se = new Set(value);
+      const option = document.createElement('option');
+      option.value = key;
+      option.textContent = `${key} (${se.size} datasets)`;
+      dropdown.appendChild(option);
+    });
+
+    // ensure the select receives focus so native menu opens
+    dropdown.focus();
+  } catch (err) {
+    console.error('Error reading outputs folder:', err);
   }
 });
 
@@ -959,4 +968,3 @@ document.getElementById('results-string').addEventListener('change', (event) => 
 
 
 
-  

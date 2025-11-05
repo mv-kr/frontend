@@ -12,13 +12,7 @@ RUN apt-get -y install libboost-dev
 
 RUN apt-get -y install libomp-dev 
 
-#RUN apt-get -y install python3.8
-
-#RUN apt-get -y install python3-tk
-
-#RUN apt-get -y install python3-pil
-
-#RUN apt-get -y install python3-pil.imagetk
+#RUN apt-get -y install libnlopt-dev
 
 COPY docker/. /usr/src/myapp
 

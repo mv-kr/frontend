@@ -18,8 +18,21 @@ using namespace mci::utils;
 
 parameter_parser::parameter_parser() {}
 
+/** helper function that reads line into a vector */
+std::vector<double> mci::utils::parameter_parser::parse_line_to_vector( std::stringstream& line_stream, char delimiter) {
+    std::vector<double> result;
+    std::string item;
+    while (std::getline(line_stream, item, delimiter)) {
+
+        result.push_back(std::stod(item));
+            
+        
+    }
+    return result;
+}
+
 /** read data from str_file **/
-void parameter_parser::read_data(const std::string& str_file) {
+void parameter_parser::read_data(const std::string& str_file, const size_t rows_per_entry) {
     
     // aux variables
     std::string line, val_str;
@@ -29,55 +42,78 @@ void parameter_parser::read_data(const std::string& str_file) {
     //open file
     std::ifstream in_file;
     in_file.open(str_file);
+
     if(in_file) {
-        //read data and store them
+        //read data line by line and store in a map of eigen::matrixXd objects
         std::vector<std::vector<double>> m(0);
         size_t max_dim = 0;
-        while (std::getline(in_file, line ) ) {
+
+        std::string key;
+
+        while ( std::getline(in_file, line ) ) {
+            
             
             row_stream.clear();
             row_stream.str(line);
             
-            //read vector of values
-            size_t dim = 0;
+            std::getline(row_stream, key, ',' ) ; // get dataset_id
+
             std::vector<double> v_tmp(0);
-            while (std::getline(row_stream, val_str, ',' ) ) {
-                try {
-                    v_tmp.push_back(std::stod(val_str));
-                    dim++;
-                } catch (const std::invalid_argument& e) {
-                    throw std::invalid_argument("Error parsing datafile " + str_file
-                                                + ": data should be given in a matrix form. Values in each row should be separated by ','.");
-                }
+            try{
+                //read data
+                v_tmp = parse_line_to_vector(row_stream, ',' );
+            } catch (std::exception& e) {
+                std::cout<<row_stream.str()<<std::endl;
+                throw std::invalid_argument("Error parsing data for dataset " + key + ": Numeric values should be separated by ',' .");
             }
             
+
             m.push_back(v_tmp);
-            if (dim> max_dim)
-                max_dim = dim;
+
+            for (int r=1; r<rows_per_entry; r++) {
+                // read next row of the same dataset
+                std::getline(in_file, line );
+                row_stream.clear();
+                row_stream.str(line);
+                //skip dataset_id
+                std::getline(row_stream, key, ',' );
+                //read data
+                std::vector<double> v_tmp2(0);
+                try {
+                    v_tmp2 = parse_line_to_vector(row_stream, ',' );    
+                } catch (std::exception& e) {
+                    std::cout<<row_stream.str()<<std::endl;
+                    throw std::invalid_argument("Error parsing data for dataset " + key + ": Numeric values should be separated by ',' .");
+                }
+                
+                //append to matrix
+                m.push_back(v_tmp2);
+            }
+
+            //convert to eigen::matrixXd
+            Eigen::MatrixXd eig_mat(m.size(),m[0].size());
+            for (size_t i =0 ; i<m.size(); i++ ) {
+                for (size_t j =0 ; j<m[i].size(); j++ )
+                    eig_mat(i, j) = m[i][j];
+            }
+            
+
+            data_map[key] = eig_mat;
+            m.clear();
             
         }
-        
-        in_file.close();
-        
-        //store them in the eigen::matrixXd object
-        Eigen::MatrixXd eig_mat = Eigen::MatrixXd::Zero(m.size(),max_dim);
-        for (size_t i =0 ; i<m.size(); i++ ) {
-            //if (m[i].size() != m[0].size())
-            //    throw std::invalid_argument("Error parsing datafile" + str_file
-            //                                + ": Check all rows have the same number of elements.");
-            
-            for (size_t j =0 ; j<m[i].size(); j++ )
-                eig_mat(i, j) = m[i][j];
-        }
-        data = eig_mat;
-        
-        
-        //std::cout<<eig_mat<<std::endl;
+    in_file.close();
+ //std::cout<<eig_mat<<std::endl;
     
     } else {
         throw std::invalid_argument("Couldn't find data file: " + str_file );
     }
 }
+
+
+
+
+
 
 /** read parameters from a file ***/
 void parameter_parser::read_parameters(const std::string& str_file) {

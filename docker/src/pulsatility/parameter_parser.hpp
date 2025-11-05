@@ -34,14 +34,18 @@ namespace mci {
             std::map<std::string, std::vector<std::string>> resV_s;
             std::map<std::string, std::string> resS_s;
             Eigen::MatrixXd data;
-            
+            std::map<std::string, Eigen::MatrixXd> data_map;
+
             parameter_parser();
             
             /** read parameters from a file ***/
             void read_parameters(const std::string& str_file);
             
             /** read parameters from a file ***/
-            void read_data(const std::string& str_file);
+            void read_data(const std::string& str_file, const size_t rows_per_entry);
+
+            std::vector<double> parse_line_to_vector( std::stringstream& line_stream, char delimiter);
+            
             
         };
         

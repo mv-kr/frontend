@@ -1,13 +1,14 @@
 //
-//  MCMC_gibbs_hmc.hpp
+//  shMCMC_gibbs_sMMALA.hpp
 //  mci
 //
 //  Created by Margaritis Voliotis on 20/09/2020.
 //  Copyright © 2020 Margaritis Voliotis. All rights reserved.
 //
 
-#ifndef MCMC_gibbs_sMMALA_hpp
-#define MCMC_gibbs_sMMALA_hpp
+#ifndef shMCMC_gibbs_sMMALA_hpp
+#define shMCMC_gibbs_sMMALA_hpp
+
 
 
 #include "basic_algorthm.hpp"
@@ -30,7 +31,7 @@ namespace mci {
         using MCMC_gibbs_hmc_parameter_t = std::map<std::string, double>;
         using  chain_doubles_t = std::vector<double> ;
         
-        class MCMC_gibbs_sMMALA: public basic_algorithm<MCMC_gibbs_hmc_parameter_t, chain_doubles_t> {
+        class shMCMC_gibbs_sMMALA: public basic_algorithm<MCMC_gibbs_hmc_parameter_t, chain_doubles_t> {
             
         protected:
             
@@ -71,11 +72,11 @@ namespace mci {
             const static std::string PARAM_blocks_no;
             const static std::string PARAM_mmala_blocks_no;
             const static std::string PARAM_report_every;
-            const static std::string PARAM_adapt_runs;
             const static std::string NAME;
+            const static std::string PARAM_adapt_runs;
             
             /** constructor **/
-            MCMC_gibbs_sMMALA(const MCMC_gibbs_hmc_parameter_t& p,
+            shMCMC_gibbs_sMMALA(const MCMC_gibbs_hmc_parameter_t& p,
                      mci::models::basic_model* m, cSMC_AS* csmc, SMC* smc,
                      const Eigen::MatrixXd& d, const Eigen::MatrixXd& c, const Eigen::MatrixXd& M,
                      const stochastic& r,
@@ -181,4 +182,4 @@ namespace mci {
 }
 
 
-#endif /* MCMC_gibbs_hmc_hpp */
+#endif /* shMCMC_gibbs_sMMALA */

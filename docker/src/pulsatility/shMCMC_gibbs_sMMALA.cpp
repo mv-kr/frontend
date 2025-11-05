@@ -1,12 +1,12 @@
 //
-//  MCMC_gibbs_hmc.cpp
+//  shMCMC_gibbs_sMMALA.cpp
 //  mci
 //
 //  Created by Margaritis Voliotis on 20/09/2020.
 //  Copyright © 2020 Margaritis Voliotis. All rights reserved.
 //
 
-#include "MCMC_gibbs_sMMALA.hpp"
+#include "shMCMC_gibbs_sMMALA.hpp"
 
 #include <fstream>
 
@@ -15,22 +15,22 @@ using namespace mci::models;
 
 
 /** const static members definitions**/
-const std::string mci::algorithms::MCMC_gibbs_sMMALA::PARAM_iterations = "iterations";
-const std::string mci::algorithms::MCMC_gibbs_sMMALA::PARAM_warmup_pct = "warmup_pct";
-const std::string mci::algorithms::MCMC_gibbs_sMMALA::PARAM_theta_dim = "theta_dim";
-const std::string mci::algorithms::MCMC_gibbs_sMMALA::PARAM_hmc_theta_dim = "hmc_theta_dim";
-const std::string mci::algorithms::MCMC_gibbs_sMMALA::PARAM_epsilon = "epsilon";
-const std::string mci::algorithms::MCMC_gibbs_sMMALA::PARAM_steps = "steps";
-const std::string mci::algorithms::MCMC_gibbs_sMMALA::PARAM_iter_adapt = "iter_adapt";
-const std::string mci::algorithms::MCMC_gibbs_sMMALA::PARAM_delta = "delta";
-const std::string mci::algorithms::MCMC_gibbs_sMMALA::PARAM_report_every = "report_every";
-const std::string mci::algorithms::MCMC_gibbs_sMMALA::PARAM_blocks_no = "blocks_no";
-const std::string mci::algorithms::MCMC_gibbs_sMMALA::PARAM_mmala_blocks_no = "mmala_blocks_no";
-const std::string mci::algorithms::MCMC_gibbs_sMMALA::PARAM_adapt_runs = "adapt_runs";  
-const std::string mci::algorithms::MCMC_gibbs_sMMALA::NAME = "MCMC_gibbs_sMMALA";
+const std::string mci::algorithms::shMCMC_gibbs_sMMALA::PARAM_iterations = "iterations";
+const std::string mci::algorithms::shMCMC_gibbs_sMMALA::PARAM_warmup_pct = "warmup_pct";
+const std::string mci::algorithms::shMCMC_gibbs_sMMALA::PARAM_theta_dim = "theta_dim";
+const std::string mci::algorithms::shMCMC_gibbs_sMMALA::PARAM_hmc_theta_dim = "hmc_theta_dim";
+const std::string mci::algorithms::shMCMC_gibbs_sMMALA::PARAM_epsilon = "epsilon";
+const std::string mci::algorithms::shMCMC_gibbs_sMMALA::PARAM_steps = "steps";
+const std::string mci::algorithms::shMCMC_gibbs_sMMALA::PARAM_iter_adapt = "iter_adapt";
+const std::string mci::algorithms::shMCMC_gibbs_sMMALA::PARAM_adapt_runs = "adapt_runs";
+const std::string mci::algorithms::shMCMC_gibbs_sMMALA::PARAM_delta = "delta";
+const std::string mci::algorithms::shMCMC_gibbs_sMMALA::PARAM_report_every = "report_every";
+const std::string mci::algorithms::shMCMC_gibbs_sMMALA::PARAM_blocks_no = "blocks_no";
+const std::string mci::algorithms::shMCMC_gibbs_sMMALA::PARAM_mmala_blocks_no = "mmala_blocks_no";
+const std::string mci::algorithms::shMCMC_gibbs_sMMALA::NAME = "shMCMC_gibbs_sMMALA";
 
 
-MCMC_gibbs_sMMALA::MCMC_gibbs_sMMALA(const MCMC_gibbs_hmc_parameter_t& p, mci::models::basic_model* m, cSMC_AS* csmc, SMC* smc,
+shMCMC_gibbs_sMMALA::shMCMC_gibbs_sMMALA(const MCMC_gibbs_hmc_parameter_t& p, mci::models::basic_model* m, cSMC_AS* csmc, SMC* smc,
                    const Eigen::MatrixXd& d, const Eigen::MatrixXd& c, const Eigen::MatrixXd& M,
                    const stochastic& r,
                    const Eigen::VectorXd& i_g,
@@ -51,7 +51,7 @@ MCMC_gibbs_sMMALA::MCMC_gibbs_sMMALA(const MCMC_gibbs_hmc_parameter_t& p, mci::m
     upper_limit = u_limit;
     blocks_i = bl_i;
     
-    parameters[MCMC_gibbs_sMMALA::PARAM_theta_dim] = i_guess.size();
+    parameters[shMCMC_gibbs_sMMALA::PARAM_theta_dim] = i_guess.size();
     
     /**int iterations = parameters["iterations"];
      int theta_dim =  parameters["theta_dim"];
@@ -101,15 +101,15 @@ MCMC_gibbs_sMMALA::MCMC_gibbs_sMMALA(const MCMC_gibbs_hmc_parameter_t& p, mci::m
     mass_det = M.determinant();
 }
 
-Eigen::MatrixXd MCMC_gibbs_sMMALA::leapfrog( Eigen::VectorXd& theta, Eigen::VectorXd &p, const Eigen::MatrixXd& X_sample, double epsilon, bool *cond) {
+Eigen::MatrixXd shMCMC_gibbs_sMMALA::leapfrog( Eigen::VectorXd& theta, Eigen::VectorXd &p, const Eigen::MatrixXd& X_sample, double epsilon, bool *cond) {
     
-    int steps = parameters[MCMC_gibbs_sMMALA::PARAM_steps];
+    int steps = parameters[shMCMC_gibbs_sMMALA::PARAM_steps];
     //std::min(std::max(1., std::round(parameters[MCMC_gibbs_hmc::PARAM_steps]/epsilon)),10000.);//;////parameters[MCMC_gibbs_hmc::PARAM_steps];;//
     
    
     
-    size_t number_of_i_parameters = parameters[MCMC_gibbs_sMMALA::PARAM_hmc_theta_dim];
-    size_t theta_dim =  parameters[MCMC_gibbs_sMMALA::PARAM_theta_dim];
+    size_t number_of_i_parameters = parameters[shMCMC_gibbs_sMMALA::PARAM_hmc_theta_dim];
+    size_t theta_dim =  parameters[shMCMC_gibbs_sMMALA::PARAM_theta_dim];
     Eigen::VectorXd grad_term = Eigen::VectorXd::Zero(theta_dim) ;
     Eigen::VectorXd theta_star = Eigen::VectorXd::Zero(theta_dim) ;
     Eigen::MatrixXd X_sample_1 = X_sample ;
@@ -180,13 +180,13 @@ Eigen::MatrixXd MCMC_gibbs_sMMALA::leapfrog( Eigen::VectorXd& theta, Eigen::Vect
 
 
 
-const void MCMC_gibbs_sMMALA::run(chain_doubles_t& ch) {
+const void shMCMC_gibbs_sMMALA::run(chain_doubles_t& ch) {
     
     
     
     // model parameters
     size_t theta_dim =  parameters[PARAM_theta_dim]; // number of inferred parameters
-    size_t adapt_runs = parameters[PARAM_adapt_runs]; // number of adaptation runs
+    size_t adapt_runs = parameters[PARAM_adapt_runs]; // number of adaptation iterations
     //size_t hmc_theta_dim =  parameters[PARAM_hmc_theta_dim]; // number of parameters in the hmc step
     
     size_t model_state_dim = model_ptr->get_dim(); // number of state variables in the model
@@ -210,7 +210,8 @@ const void MCMC_gibbs_sMMALA::run(chain_doubles_t& ch) {
     size_t start_block_i, size_block_i;
     
     size_t mm =0;
-    std::vector<Eigen::MatrixXd> trajectories_res_tmp(iterations/report_every, X_sample) ;
+    //std::vector<Eigen::MatrixXd> trajectories_res_tmp(iterations/report_every, X_sample) ;
+    std::vector<Eigen::MatrixXd> trajectories_res_tmp(iterations, X_sample) ;
     double time;
     
     
@@ -221,13 +222,13 @@ const void MCMC_gibbs_sMMALA::run(chain_doubles_t& ch) {
     
     // mcmc parameters
     
-    double epsilon = parameters[MCMC_gibbs_sMMALA::PARAM_epsilon];
-    unsigned int iter_adapt = parameters[MCMC_gibbs_sMMALA::PARAM_iter_adapt];
+    double epsilon = parameters[shMCMC_gibbs_sMMALA::PARAM_epsilon];
+    unsigned int iter_adapt = parameters[shMCMC_gibbs_sMMALA::PARAM_iter_adapt];
     double eps_0;
     double mu;
     double H_0_bar = 0;
     double gamma_param = 0.05;
-    double delta_param = parameters[MCMC_gibbs_sMMALA::PARAM_delta];
+    double delta_param = parameters[shMCMC_gibbs_sMMALA::PARAM_delta];
     double t_0 = 10;
     double kappa = 0.75;
     Eigen::MatrixXd epsilons = Eigen::MatrixXd::Zero(iter_adapt,parameter_blocks);
@@ -238,20 +239,26 @@ const void MCMC_gibbs_sMMALA::run(chain_doubles_t& ch) {
     /*** Initialise ***/
     double current_post_value = 0;
     double log_post_values_max = -1e10;
-    
+   
     double likelihood_st ;
     double j_likelihood_st ;
     Eigen::VectorXd chain_st(theta_dim);
     Eigen::VectorXd epsilons_f(parameter_blocks);
     /** variables hodling chain results **/
-    Eigen::MatrixXd param_chain(theta_dim, iterations);
+    Eigen::MatrixXd param_chain(theta_dim, iter_adapt);
     // vector holding marginal log likelihood
-    Eigen::VectorXd likelihoods(iterations);
-    Eigen::VectorXd j_likelihoods(iterations);
-    Eigen::VectorXd posteriors(iterations);
+    Eigen::VectorXd likelihoods(iter_adapt);
+    Eigen::VectorXd j_likelihoods(iter_adapt);
+    Eigen::VectorXd posteriors(iter_adapt);
+    
+    Eigen::MatrixXd param_chain_f(theta_dim, iterations);
+    Eigen::VectorXd posteriors_f(iterations);
+    Eigen::VectorXd likelihoods_f(iterations);
+    
     // vector holding acceptance probabilities
-    Eigen::MatrixXd accepts = Eigen::MatrixXd::Zero(iterations, parameter_blocks);
-
+    Eigen::MatrixXd accepts = Eigen::MatrixXd::Zero(iter_adapt, parameter_blocks);
+    Eigen::VectorXd init_g = this->i_guess ;
+    bool best_found = false;
     for(size_t ir=0; ir<adapt_runs; ir++) {
         
         std::cout << "\n(thread " << OpenMP::getThreadNum() << ") Starting MCMC hmc warmup ... (run " << ir+1 << "/" << adapt_runs <<", " << iter_adapt << " iterations)" << std::endl;
@@ -260,11 +267,9 @@ const void MCMC_gibbs_sMMALA::run(chain_doubles_t& ch) {
         epsilons_bar = Eigen::MatrixXd::Zero(iter_adapt,parameter_blocks);
         H_bar = Eigen::MatrixXd::Zero(iter_adapt,parameter_blocks);
 
-        this->i_guess = this->i_guess.array() + 0.1* (adapt_runs-1)/(adapt_runs)* this->i_guess.array() *  rng.rand_v(theta_dim).array();
-    
-    
-        std::cout<< "(thread " << OpenMP::getThreadNum() << ") Initialising latent variables using vanilla SMC and theta_0 = ( " << i_guess.transpose() << " )" << std::endl;
+        this->i_guess = init_g.array() + 0.1* (adapt_runs-1.0)/(adapt_runs)* init_g.array() *  rng.rand_v(theta_dim).array();
 
+        std::cout<< "(thread " << OpenMP::getThreadNum() << ") Initialising latent variables using vanilla SMC and theta_0 = ( " << i_guess.transpose() << " )" << std::endl;
         model_ptr->update_i_parameters( this->i_guess );
         SMC_ptr->run(X_sample);
     
@@ -294,7 +299,6 @@ const void MCMC_gibbs_sMMALA::run(chain_doubles_t& ch) {
         cSMC_AS_ptr->run(X_sample, X_sample_1);
         X_sample =X_sample_1;
         joint_llik = model_ptr->log_joint_density(X_sample, data, &marginal_llik);
-        
         
         
         param_chain.col(0) = this->i_guess;
@@ -393,6 +397,7 @@ const void MCMC_gibbs_sMMALA::run(chain_doubles_t& ch) {
                 << "| div.: " << (((double)div)/report_every)
                 << "\n\t theta (" << theta.transpose()
                 << ") | epsilon: " << epsilons.row(i)
+                << " | epsilon_bar: " << epsilons_bar.row(i)
                 << std::endl;
                 
                 div = 0;
@@ -400,106 +405,247 @@ const void MCMC_gibbs_sMMALA::run(chain_doubles_t& ch) {
                 time = (omp_get_wtime() );
             }
             
-            
+        
+            if (current_post_value > log_post_values_max) {
+                log_post_values_max = current_post_value;
+                likelihood_st = likelihoods(i);
+                j_likelihood_st = j_likelihoods(i);
+                chain_st = param_chain.col(i);
+                
+                X_sample_best = X_sample;
+                best_found = true;
+            }
             
         }//end adaptive iterations
         
-        
-       
-        if (current_post_value > log_post_values_max) {
-            log_post_values_max = current_post_value;
-            likelihood_st = likelihoods(iter_adapt-1);
-            j_likelihood_st = j_likelihoods(iter_adapt-1);
-            chain_st = param_chain.col(iter_adapt-1);
+        if (best_found) {
             epsilons_f = epsilons_bar.row(iter_adapt-1);
-            X_sample_best = X_sample;
+            best_found = false;
         }
     } // end random intialisation loop
 
     
-    std::cout<< std::endl << "Starting sampling current theta_0 = (" << param_chain.col(iter_adapt-1).transpose() << ")"<< std::endl;
-    
-    
-    // --------------------------- MCMC gibbs main body ------------------------
-    
-    param_chain.col(0) = chain_st; //param_chain.col(iter_adapt-1);
-    likelihoods(0)     =  likelihood_st; //likelihoods(iter_adapt-1) ;
-    j_likelihoods(0)     =  j_likelihood_st; //j_likelihoods(iter_adapt-1) ;
-    posteriors(0)      = log_post_values_max;
-    //Eigen::VectorXd epsilons_f = epsilons_bar.row(iter_adapt-1);
-    
-    time = (omp_get_wtime() ); // get time
-    
-    X_sample = X_sample_best;
-    for (unsigned int i=1 ; i<iterations; i++) {
-        // - get current parameter vector
-        theta = param_chain.col(i-1);
+    //--------------------------- end warm-up --------------------
+
+        epsilons = Eigen::MatrixXd::Zero(iter_adapt,parameter_blocks);
+        epsilons_bar = Eigen::MatrixXd::Zero(iter_adapt,parameter_blocks);
+        H_bar = Eigen::MatrixXd::Zero(iter_adapt,parameter_blocks);
+
         
+
+        /** initalise method parameters **/
+        std::cout<< "(thread " << OpenMP::getThreadNum() << ") Initialising sMMALA parameters ..." << std::endl;
         
-        // - 1. sample trajectory (latent variables) given all parameters
-        model_ptr->update_i_parameters(theta); // update model parameters
-        cSMC_AS_ptr->run(X_sample, X_sample_1); // run cSMC to get a new trajecotry conditioned on the current
-        X_sample = X_sample_1; // update trajectory
-        
-        
-        
-        
-        // - 2 sample using simplified MMALA
-        for (size_t pb_i=0 ; pb_i<parameter_mmala_blocks; pb_i++) {
-        // size_t pb_i=0;
-            start_block_i  = blocks_i(pb_i); //+ pb_i;
-            size_block_i   = blocks_i(pb_i+1)-blocks_i(pb_i);
-            
-            epsilon = exp( epsilons_f(pb_i) );
-            sMMALA_sampler_block(theta,
-                           X_sample,
-                           epsilon,
-                           acceptance_prob,
-                           joint_llik,
-                           marginal_llik,
-                           div,
-                           start_block_i,size_block_i);
-            
-            param_chain.col(i) = theta;
-            likelihoods(i)     = marginal_llik;
-            j_likelihoods(i)     =  joint_llik;
-            accepts(i,pb_i)       = acceptance_prob;
-            
-            
+        eps_0 =  1;//find_epsilon(this->i_guess, X_sample);
+        mu = log(10.*eps_0);
+        for (size_t bli = 0; bli<parameter_blocks; bli++) {
+            epsilons(0,bli) = log(eps_0);
+            epsilons_bar(0,bli) = log(eps_0);
+            H_bar(0,bli) = H_0_bar;
         }
+        epsilon = eps_0;
         
+        //report parameters
+        std::cout<< " --- epsilon = " << eps_0 << std::endl;
+        std::cout<< " --- mu = " << mu << std::endl;
+        std::cout<< " --- gamma = " << gamma_param << std::endl;
+        std::cout<< " --- kappa = " << kappa << std::endl;
+        std::cout<< " --- t_0 = " << t_0 << std::endl;
+        std::cout<< " --- delta = " << delta_param << std::endl;
+        // std::cout<< " --- steps = " << steps << std::endl;
         
+        param_chain.col(0) = chain_st; //param_chain.col(iter_adapt-1);
+        likelihoods(0)     =  likelihood_st; //likelihoods(iter_adapt-1) ;
+        j_likelihoods(0)   =  j_likelihood_st; //j_likelihoods(iter_adapt-1) ;
+        posteriors(0)      = log_post_values_max;
+        X_sample = X_sample_best;
         
-        
-        // - 3. sample using MH
-        
-        for (size_t pb_i=parameter_mmala_blocks ; pb_i<parameter_blocks; pb_i++) {
+        time = (omp_get_wtime() ); // get time
+        for (unsigned int i=1 ; i<iter_adapt; i++) {
+            // - get current parameter vector
+            theta = param_chain.col(i-1);
             
-            start_block_i  = blocks_i(pb_i); //+ pb_i;
-            size_block_i   = blocks_i(pb_i+1)-blocks_i(pb_i);
-            epsilon  =  exp( epsilons_f(pb_i) );
-           
-            MH_sampler_single_parameter( theta,
-                                        X_sample,
-                                        epsilon,
-                                        acceptance_prob,
-                                        joint_llik,
-                                        marginal_llik,
-                                        start_block_i,size_block_i);
+            
+            // - 1. sample trajectory (latent variables) given all parameters
+            model_ptr->update_i_parameters(theta); // update model parameters
+            cSMC_AS_ptr->run(X_sample, X_sample_1); // run cSMC to get a new trajecotry conditioned on the current
+            X_sample = X_sample_1; // update trajectory
+            
+            
+            
+            
+            // - 2 sample using simplified MMALA
+            for (size_t pb_i=0 ; pb_i<parameter_mmala_blocks; pb_i++) {
+            // size_t pb_i=0;
+                start_block_i  = blocks_i(pb_i); //+ pb_i;
+                size_block_i   = blocks_i(pb_i+1)-blocks_i(pb_i);
                 
-            param_chain.col(i) = theta;
-            likelihoods(i)     = marginal_llik;
-            j_likelihoods(i)     =  joint_llik;
-            accepts(i,pb_i)    = acceptance_prob;
-         
-        }
+                epsilon = exp( epsilons(i-1,pb_i) );
+                sMMALA_sampler_block(theta,
+                            X_sample,
+                            epsilon,
+                            acceptance_prob,
+                            joint_llik,
+                            marginal_llik,
+                            div,
+                            start_block_i,size_block_i);
+                
+                param_chain.col(i) = theta;
+                likelihoods(i)     = marginal_llik;
+                j_likelihoods(i)     = joint_llik;
+                accepts(i,pb_i)       = acceptance_prob;
+                
+                
+                
+                
+                // - adapt epsilon parameter
+                
+                H_bar(i,pb_i) = (1.-1./(i+t_0))*H_bar(i-1) + 1./(i+t_0) * (delta_param - accepts(i,pb_i)  );
+                epsilons(i,pb_i) = mu - sqrt(i)/gamma_param * H_bar(i,pb_i);
+                epsilons_bar(i,pb_i) = pow(i,-kappa) * epsilons(i,pb_i) + (1- pow(i,-kappa)) * epsilons_bar(i-1,pb_i);
+            
+            }
+            
+            
+            
+            
+            // - 3. sample using MH
+            
+            for (size_t pb_i=parameter_mmala_blocks ; pb_i<parameter_blocks; pb_i++) {
+                
+                start_block_i  = blocks_i(pb_i); //+ pb_i;
+                size_block_i   = blocks_i(pb_i+1)-blocks_i(pb_i);
+                epsilon  =  exp( epsilons(i-1,pb_i) );
+            
+                current_post_value = MH_sampler_single_parameter( theta,
+                                            X_sample,
+                                            epsilon,
+                                            acceptance_prob,
+                                            joint_llik,
+                                            marginal_llik,
+                                            start_block_i,size_block_i);
+                    
+                param_chain.col(i) = theta;
+                likelihoods(i)     = marginal_llik;
+                j_likelihoods(i)     = joint_llik;
+                accepts(i,pb_i)    = acceptance_prob;
+            
+                
+                
+                // - adapt epsilon parameters
+                H_bar(i,pb_i) = (1.-1./(i+t_0))*H_bar(i-1,pb_i) + 1./(i+t_0) * (delta_param - accepts(i,pb_i)  );
+                epsilons(i,pb_i) = mu - sqrt(i)/gamma_param * H_bar(i,pb_i);
+                epsilons_bar(i,pb_i) = pow(i,-kappa) * epsilons(i,pb_i) + (1- pow(i,-kappa)) * epsilons_bar(i-1,pb_i);
+            
+                
+            }
+            
         
-      
-        // - report progress every report_every iterations //
-        if ((i+1)%report_every  == 0 ){
-            //double acc_prob = (((double)accepts.middleRows(i+1-report_every,report_every).sum())/(report_every));
-            time = (omp_get_wtime() - time);
-            std::cout << "(thread " << OpenMP::getThreadNum() << ") --- iteration " << i+1 << "/" << (iterations)
+            // - report progress //
+            if ( (i+1)%(iter_adapt/10)  == 0 || i+1 == iter_adapt ){
+                
+                time = (omp_get_wtime() - time);
+                std::cout << "(thread " << OpenMP::getThreadNum() << ") --- adapt run fixing epsilon"
+                << " (time " << time
+                << ")\n\t m_log_lik: " << marginal_llik
+                << "| joint_lik: " << joint_llik 
+                << "| log_post: " << current_post_value
+                << "| div.: " << (((double)div)/report_every)
+                << "\n\t theta (" << theta.transpose()
+                << ") | epsilon: " << epsilons.row(i)
+                << " | epsilon_bar: " << epsilons_bar.row(i)
+                << std::endl;
+                
+                div = 0;
+                
+                time = (omp_get_wtime() );
+            }
+            
+        }//end adaptive iterations
+
+    //-----------------------------------------------------------
+
+    std::cout<< std::endl << "Starting sampling current theta_0 = (" << chain_st.transpose() << ")"<< std::endl;
+    
+    epsilons_f = epsilons_bar.row(iter_adapt-1);
+    // --------------------------- MCMC main body ------------------------
+    for (unsigned int mmm=0 ; mmm<iterations; mmm++) {
+
+        param_chain.col(0) = chain_st; //param_chain.col(iter_adapt-1);
+        likelihoods(0)     =  likelihood_st; //likelihoods(iter_adapt-1) ;
+        j_likelihoods(0)   =  j_likelihood_st; //j_likelihoods(iter_adapt-1) ;
+        posteriors(0)      = log_post_values_max;
+        
+        
+        time = (omp_get_wtime() ); // get time
+        
+        X_sample = X_sample_best;
+        for (unsigned int i=1 ; i<report_every; i++) {
+            // - get current parameter vector
+            theta = param_chain.col(i-1);
+            
+            
+            // - 1. sample trajectory (latent variables) given all parameters
+            model_ptr->update_i_parameters(theta); // update model parameters
+            cSMC_AS_ptr->run(X_sample, X_sample_1); // run cSMC to get a new trajecotry conditioned on the current
+            X_sample = X_sample_1; // update trajectory
+            
+            
+            
+            
+            // - 2 sample using simplified MMALA
+            for (size_t pb_i=0 ; pb_i<parameter_mmala_blocks; pb_i++) {
+            // size_t pb_i=0;
+                start_block_i  = blocks_i(pb_i); //+ pb_i;
+                size_block_i   = blocks_i(pb_i+1)-blocks_i(pb_i);
+                
+                epsilon = exp( epsilons_f(pb_i) );
+                sMMALA_sampler_block(theta,
+                            X_sample,
+                            epsilon,
+                            acceptance_prob,
+                            joint_llik,
+                            marginal_llik,
+                            div,
+                            start_block_i,size_block_i);
+                
+                param_chain.col(i) = theta;
+                likelihoods(i)     = marginal_llik;
+                j_likelihoods(i)     =  joint_llik;
+                accepts(i,pb_i)       = acceptance_prob;
+                
+            }
+
+            // - 3. sample using MH
+            
+            for (size_t pb_i=parameter_mmala_blocks ; pb_i<parameter_blocks; pb_i++) {
+                
+                start_block_i  = blocks_i(pb_i); //+ pb_i;
+                size_block_i   = blocks_i(pb_i+1)-blocks_i(pb_i);
+                epsilon  =  exp( epsilons_f(pb_i) );
+            
+                current_post_value = MH_sampler_single_parameter( theta,
+                                            X_sample,
+                                            epsilon,
+                                            acceptance_prob,
+                                            joint_llik,
+                                            marginal_llik,
+                                            start_block_i,size_block_i);
+                    
+                param_chain.col(i) = theta;
+                likelihoods(i)     = marginal_llik;
+                j_likelihoods(i)     =  joint_llik;
+                accepts(i,pb_i)    = acceptance_prob;
+                posteriors(i) = current_post_value;    
+                
+            }
+            
+        
+            // - report progress every report_every iterations //
+            if ( (i+1) == report_every ){
+                //double acc_prob = (((double)accepts.middleRows(i+1-report_every,report_every).sum())/(report_every));
+                time = (omp_get_wtime() - time);
+                std::cout << "(thread " << OpenMP::getThreadNum() << ") --- iteration " << mmm+1 << "/" << (iterations)
                 << " (time " << time
                 << ")\n\t log_lik: " << likelihoods(i)
                 << "| joint_lik: " << j_likelihoods(i)
@@ -509,30 +655,33 @@ const void MCMC_gibbs_sMMALA::run(chain_doubles_t& ch) {
                 << "\n\t theta (" << param_chain.col(i).transpose()
                 << ") | epsilon: " << epsilons_f.transpose()
                 << std::endl;
+                
+                div = 0;
+                
+                trajectories_res_tmp[mmm]= X_sample ;
+                param_chain_f.col(mmm)= param_chain.col(i);
+                likelihoods_f(mmm)= likelihoods(i);
+                posteriors_f(mmm)= posteriors(i);
+                mm++;
+                time = (omp_get_wtime() );
+            }
             
-            div = 0;
             
-            trajectories_res_tmp[mm]= X_sample ;
-            mm++;
-            time = (omp_get_wtime() );
-        }
-        
-        
-        
-    }//end iterations
+            
+        }//end iterations
+    }//end mcmc runs
     
     
     
-    
-    this->chain_res = param_chain;
-    this->likelihood_res = likelihoods;
+    this->chain_res = param_chain_f;
+    this->likelihood_res = posteriors_f;
     this->trajectories_res = trajectories_res_tmp;
     
     
 }//end run function
 
 
-const double MCMC_gibbs_sMMALA::MH_sampler_single_parameter(Eigen::VectorXd& theta,
+const double shMCMC_gibbs_sMMALA::MH_sampler_single_parameter(Eigen::VectorXd& theta,
                                 const Eigen::MatrixXd& X_sample,
                                 const double& epsilon,
                                 double& acceptance_prob,
@@ -541,7 +690,7 @@ const double MCMC_gibbs_sMMALA::MH_sampler_single_parameter(Eigen::VectorXd& the
                                 const size_t& start_block_i,
                                 const size_t& size_block_i) {
     
-    size_t theta_dim =  parameters[MCMC_gibbs_sMMALA::PARAM_theta_dim];
+    size_t theta_dim =  parameters[shMCMC_gibbs_sMMALA::PARAM_theta_dim];
     Eigen::VectorXd theta_current(theta_dim), theta_star(theta_dim);
     double joint_Lik_star,  ll_star, L, acceptance_ratio;
     bool  cond = false;
@@ -620,6 +769,7 @@ const double MCMC_gibbs_sMMALA::MH_sampler_single_parameter(Eigen::VectorXd& the
         
         acceptance_ratio = exp(L + log_prior_ratio + log_proposal_density_ratio);
         
+        
 
         if (std::isnan(acceptance_ratio)) {
             acceptance_prob = 0.0;
@@ -648,7 +798,7 @@ const double MCMC_gibbs_sMMALA::MH_sampler_single_parameter(Eigen::VectorXd& the
 
 
 /** simplified MMALA implementation **/
-const void MCMC_gibbs_sMMALA::sMMALA_sampler(Eigen::VectorXd& theta,
+const void shMCMC_gibbs_sMMALA::sMMALA_sampler(Eigen::VectorXd& theta,
                                        const Eigen::MatrixXd& X_sample,
                                        const double& epsilon,
                                        double& acceptance_prob,
@@ -763,7 +913,7 @@ const void MCMC_gibbs_sMMALA::sMMALA_sampler(Eigen::VectorXd& theta,
 
 
 /** MMALA implementation**/
-const void MCMC_gibbs_sMMALA::MMALA_sampler(Eigen::VectorXd& theta,
+const void shMCMC_gibbs_sMMALA::MMALA_sampler(Eigen::VectorXd& theta,
                                           const Eigen::MatrixXd& X_sample,
                                           const double& epsilon,
                                           double& acceptance_prob,
@@ -771,8 +921,8 @@ const void MCMC_gibbs_sMMALA::MMALA_sampler(Eigen::VectorXd& theta,
                                           double& marginal_llik,
                                           unsigned int& div,
                                           unsigned int iter) {
-    size_t number_of_i_parameters = parameters[MCMC_gibbs_sMMALA::PARAM_hmc_theta_dim];
-    size_t theta_dim =  parameters[MCMC_gibbs_sMMALA::PARAM_theta_dim];
+    size_t number_of_i_parameters = parameters[shMCMC_gibbs_sMMALA::PARAM_hmc_theta_dim];
+    size_t theta_dim =  parameters[shMCMC_gibbs_sMMALA::PARAM_theta_dim];
     Eigen::VectorXd theta_current(theta_dim) , theta_star(theta_dim) ;
     
     Eigen::VectorXd mu(number_of_i_parameters);
@@ -890,7 +1040,7 @@ const void MCMC_gibbs_sMMALA::MMALA_sampler(Eigen::VectorXd& theta,
 }
 
 /** function HMC implementation**/
-const void MCMC_gibbs_sMMALA::hmc_sampler(Eigen::VectorXd& theta,
+const void shMCMC_gibbs_sMMALA::hmc_sampler(Eigen::VectorXd& theta,
                                        const Eigen::MatrixXd& X_sample,
                                        const double& epsilon,
                                        double& acceptance_prob,
@@ -898,8 +1048,8 @@ const void MCMC_gibbs_sMMALA::hmc_sampler(Eigen::VectorXd& theta,
                                        double& marginal_llik,
                                        unsigned int& div) {
     
-    size_t number_of_i_parameters = parameters[MCMC_gibbs_sMMALA::PARAM_hmc_theta_dim];;
-    size_t theta_dim =  parameters[MCMC_gibbs_sMMALA::PARAM_theta_dim];
+    size_t number_of_i_parameters = parameters[shMCMC_gibbs_sMMALA::PARAM_hmc_theta_dim];;
+    size_t theta_dim =  parameters[shMCMC_gibbs_sMMALA::PARAM_theta_dim];
     Eigen::VectorXd p_current(theta_dim), p_star(theta_dim), theta_current(theta_dim), theta_star(theta_dim);
     Eigen::VectorXd p_zero = Eigen::VectorXd::Zero(theta_dim);
     double H_current, H_star, joint_Lik_c, joint_Lik_star, ll_c, ll_star, L, acceptance_ratio;
@@ -990,14 +1140,14 @@ const void MCMC_gibbs_sMMALA::hmc_sampler(Eigen::VectorXd& theta,
 
 
 /** run the algorithm using parameters in params and store results in res **/
-const void MCMC_gibbs_sMMALA::run(const MCMC_gibbs_hmc_parameter_t& p, chain_doubles_t& ch) {}
+const void shMCMC_gibbs_sMMALA::run(const MCMC_gibbs_hmc_parameter_t& p, chain_doubles_t& ch) {}
 
 
-const void MCMC_gibbs_sMMALA::print_chain_parameters() {
+const void shMCMC_gibbs_sMMALA::print_chain_parameters() {
     std::cout << this->chain_res << std::endl;
 }
 
-const void MCMC_gibbs_sMMALA::AIS_sampler(Eigen::VectorXd& theta,
+const void shMCMC_gibbs_sMMALA::AIS_sampler(Eigen::VectorXd& theta,
                                  Eigen::MatrixXd& X_sample,
                                  const double& epsilon,
                                  double& acceptance_prob,
@@ -1010,7 +1160,7 @@ const void MCMC_gibbs_sMMALA::AIS_sampler(Eigen::VectorXd& theta,
     
     Eigen::MatrixXd& X_sample_1 = X_sample;
     Eigen::MatrixXd& X_sample_2 = X_sample;
-    size_t theta_dim =  parameters[MCMC_gibbs_sMMALA::PARAM_theta_dim];
+    size_t theta_dim =  parameters[shMCMC_gibbs_sMMALA::PARAM_theta_dim];
     Eigen::VectorXd theta_current(theta_dim), theta_star(theta_dim), theta_tmp(theta_dim);
     double L1, L2;
     double ll_star =0.0;
@@ -1124,7 +1274,7 @@ const void MCMC_gibbs_sMMALA::AIS_sampler(Eigen::VectorXd& theta,
 
 
 
-double MCMC_gibbs_sMMALA::find_epsilon(const Eigen::VectorXd& theta, const Eigen::MatrixXd& X_sample) {
+double shMCMC_gibbs_sMMALA::find_epsilon(const Eigen::VectorXd& theta, const Eigen::MatrixXd& X_sample) {
     double epsilon = 1;
     double ratio = 0.0;
     double a = 0.0;
@@ -1136,8 +1286,8 @@ double MCMC_gibbs_sMMALA::find_epsilon(const Eigen::VectorXd& theta, const Eigen
     double L2 = 0.0;
     double H_current = 0.0;
     double H_star = 0.0;
-    size_t theta_dim =  parameters[MCMC_gibbs_sMMALA::PARAM_theta_dim];
-    size_t steps         =  parameters[MCMC_gibbs_sMMALA::PARAM_steps];
+    size_t theta_dim =  parameters[shMCMC_gibbs_sMMALA::PARAM_theta_dim];
+    size_t steps         =  parameters[shMCMC_gibbs_sMMALA::PARAM_steps];
     Eigen::MatrixXd X_sample_1 = X_sample;
     Eigen::VectorXd p_current(theta_dim);
     Eigen::VectorXd p_star(theta_dim);
@@ -1224,7 +1374,7 @@ double MCMC_gibbs_sMMALA::find_epsilon(const Eigen::VectorXd& theta, const Eigen
 
 
 
-const void MCMC_gibbs_sMMALA::print_chain_parameters(std::string str_file) {
+const void shMCMC_gibbs_sMMALA::print_chain_parameters(std::string str_file) {
     const static Eigen::IOFormat CSVFormat(Eigen::FullPrecision, Eigen::DontAlignCols, ", ", "\n");
      
     std::ofstream file_tmp;
@@ -1235,7 +1385,7 @@ const void MCMC_gibbs_sMMALA::print_chain_parameters(std::string str_file) {
 }
 
 
-const void MCMC_gibbs_sMMALA::print_chain_likelihood(std::string str_file) {
+const void shMCMC_gibbs_sMMALA::print_chain_likelihood(std::string str_file) {
     
     std::ofstream file_tmp;
     file_tmp.open(str_file);
@@ -1245,7 +1395,7 @@ const void MCMC_gibbs_sMMALA::print_chain_likelihood(std::string str_file) {
 }
 
 
-const void MCMC_gibbs_sMMALA::print_chain_trajectories(std::string str_file) {
+const void shMCMC_gibbs_sMMALA::print_chain_trajectories(std::string str_file) {
     const static Eigen::IOFormat CSVFormat(Eigen::FullPrecision, Eigen::DontAlignCols, ", ", "\n");
     
     
@@ -1260,7 +1410,7 @@ const void MCMC_gibbs_sMMALA::print_chain_trajectories(std::string str_file) {
 
 
 /** simplified MMALA implementation **/
-const void MCMC_gibbs_sMMALA::sMMALA_sampler_block(Eigen::VectorXd& theta,
+const void shMCMC_gibbs_sMMALA::sMMALA_sampler_block(Eigen::VectorXd& theta,
                                           const Eigen::MatrixXd& X_sample,
                                           const double& epsilon,
                                           double& acceptance_prob,
@@ -1372,7 +1522,7 @@ const void MCMC_gibbs_sMMALA::sMMALA_sampler_block(Eigen::VectorXd& theta,
                 
                 theta             = theta_star;
                 marginal_llik     = ll_star;
-                joint_llik        = joint_Lik_star;
+                joint_llik        = joint_Lik_star ;
                 
                 
             }
@@ -1384,7 +1534,7 @@ const void MCMC_gibbs_sMMALA::sMMALA_sampler_block(Eigen::VectorXd& theta,
 
 
 /** MMALA implementation**/
-const void MCMC_gibbs_sMMALA::MMALA_sampler_block(Eigen::VectorXd& theta,
+const void shMCMC_gibbs_sMMALA::MMALA_sampler_block(Eigen::VectorXd& theta,
                                          const Eigen::MatrixXd& X_sample,
                                          const double& epsilon,
                                          double& acceptance_prob,
@@ -1394,8 +1544,8 @@ const void MCMC_gibbs_sMMALA::MMALA_sampler_block(Eigen::VectorXd& theta,
                                          const size_t& start_index,
                                          const size_t& block_size) {
     
-    size_t number_of_i_parameters = parameters[MCMC_gibbs_sMMALA::PARAM_hmc_theta_dim];
-    size_t theta_dim =  parameters[MCMC_gibbs_sMMALA::PARAM_theta_dim];
+    size_t number_of_i_parameters = parameters[shMCMC_gibbs_sMMALA::PARAM_hmc_theta_dim];
+    size_t theta_dim =  parameters[shMCMC_gibbs_sMMALA::PARAM_theta_dim];
     Eigen::VectorXd theta_current(theta_dim) , theta_star(theta_dim) ;
     Eigen::MatrixXd G_t = Eigen::MatrixXd::Zero(number_of_i_parameters,number_of_i_parameters);
     std::vector<Eigen::MatrixXd> G_k = {Eigen::MatrixXd::Zero(number_of_i_parameters,number_of_i_parameters), Eigen::MatrixXd::Zero(number_of_i_parameters,number_of_i_parameters), Eigen::MatrixXd::Zero(number_of_i_parameters,number_of_i_parameters)};
@@ -1528,7 +1678,7 @@ const void MCMC_gibbs_sMMALA::MMALA_sampler_block(Eigen::VectorXd& theta,
 
 
 /** HMC implementation always accepting proposal if **/
-const void MCMC_gibbs_sMMALA::hmc_sampler_warmup(Eigen::VectorXd& theta,
+const void shMCMC_gibbs_sMMALA::hmc_sampler_warmup(Eigen::VectorXd& theta,
                                        const Eigen::MatrixXd& X_sample,
                                        const double& epsilon,
                                        double& acceptance_prob,
@@ -1536,8 +1686,8 @@ const void MCMC_gibbs_sMMALA::hmc_sampler_warmup(Eigen::VectorXd& theta,
                                        double& marginal_llik,
                                        unsigned int& div) {
     
-    size_t number_of_i_parameters = parameters[MCMC_gibbs_sMMALA::PARAM_hmc_theta_dim];;
-    size_t theta_dim =  parameters[MCMC_gibbs_sMMALA::PARAM_theta_dim];
+    size_t number_of_i_parameters = parameters[shMCMC_gibbs_sMMALA::PARAM_hmc_theta_dim];;
+    size_t theta_dim =  parameters[shMCMC_gibbs_sMMALA::PARAM_theta_dim];
     Eigen::VectorXd p_current(theta_dim), p_star(theta_dim), theta_current(theta_dim), theta_star(theta_dim);
     Eigen::VectorXd p_zero = Eigen::VectorXd::Zero(theta_dim);
     double H_current, H_star, joint_Lik_c, joint_Lik_star, ll_c, ll_star, L, acceptance_ratio;

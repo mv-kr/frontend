@@ -5,7 +5,7 @@ BIN     := ./bin
 SRC     := ./src/pulsatility
 INCLUDE := include
 
-LIBRARIES   := -liomp5 -Xclang -fopenmp
+LIBRARIES   := -liomp5 -Xclang -fopenmp  
 EXECUTABLE  := main
 
 

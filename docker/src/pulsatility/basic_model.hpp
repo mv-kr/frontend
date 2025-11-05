@@ -51,6 +51,7 @@ namespace mci {
             /** calculate the log ratio of proposal densities: p(theta_proposed | theta_current)/ p(theta_current  | theta_proposed) **/
             const double log_proposal_density_ratio(const Eigen::VectorXd& theta_current, const Eigen::VectorXd& theta_proposed) ;
             
+            
             /** return values of inferred model parameters**/
             virtual const Eigen::VectorXd get_i_parameters() = 0;
             
@@ -59,7 +60,7 @@ namespace mci {
             
             /** Get the model parameters **/
             virtual const double get_parameter(const std::string& str) = 0;
-            
+            virtual void set_parameters(const model_params_t& p) = 0;
             /** generate initial S **/
             virtual const state_t generate_ic(const double t_0) = 0;
             
