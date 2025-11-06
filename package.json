@@ -6,6 +6,7 @@
     "start": "electron . --no-console",
     "build": "npm run sync-version && electron-builder build --mac --linux",
     "build:mac": "npm run sync-version && electron-builder build --mac",
+    "build:win": "npm run sync-version && electron-builder build --win",
     "build:linux": "npm run sync-version && electron-builder build --linux",
     "sync-version": "node -e \"const { execSync } = require('child_process'); const tag = execSync('git describe --tags --abbrev=0').toString().trim().replace(/^v/, ''); const pkg = require('./package.json'); pkg.version = tag; require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\\n');\""
   },
