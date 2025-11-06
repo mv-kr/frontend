@@ -7,7 +7,7 @@ let dataset_id = null;
 let uniqueNames = new Map();
 // Define the settings to display and their descriptive labels
 const settingsToDisplay = {
-  'general': ['identifier_str', 'threads_no', 'chain_repeats', 'seed'],
+  'general': ['identifier_str', 'alg_code_str','threads_no', 'chain_repeats', 'seed'],
   'MCMC_gibbs_sMMALA': ['iterations', 'iter_adapt'],
   'shMCMC_gibbs_sMMALA': ['iterations','adapt_runs']
 };
@@ -21,6 +21,7 @@ const groupLabels = {
 const settingLabels = {
   'general': {
     'identifier_str': 'Job Identifier',
+    'alg_code_str': 'Algorithm',
     'threads_no': 'Number of Threads',
     'chain_repeats': 'Chain Repeats',
     'seed': 'Seed'
@@ -74,7 +75,7 @@ function createTooltip(element) {
     let left = rect.left + (rect.width - tooltipRect.width) / 2;
     let top = rect.top - tooltipRect.height - 10;
 
-    // Adjust horizontal position if tooltip goes off-screen
+    // Adjust horizontal uniqueNames if tooltip goes off-screen
     if (left < 10) left = 10;
     if (left + tooltipRect.width > window.innerWidth - 10) {
       left = window.innerWidth - tooltipRect.width - 10;
@@ -125,22 +126,30 @@ function displaySettings() {
   const container = document.getElementById('settings-container');
   container.innerHTML = '';
 
-  if (!currentSettings) {
-    console.error('currentSettings is null or undefined');
+  if (!currentSettings || !currentSettings.general || !currentSettings.general.alg_code_str) {
+    console.error('Missing required settings');
     container.innerHTML = '<p>No settings available to display.</p>';
     return;
   }
 
-  for (const [group, settingNames] of Object.entries(settingsToDisplay)) {
+  // Get the algorithm type from settings
+  const algorithmType = currentSettings.general.alg_code_str.value;
+  
+  // Only process 'general' and the matching algorithm group
+  const groupsToShow = ['general', algorithmType];
+  
+  groupsToShow.forEach(group => {
+    if (!settingsToDisplay[group]) return;
+
     const groupDiv = document.createElement('div');
     groupDiv.className = 'settings-group';
-    const groupLabel = groupLabels[group] || group; // Use the descriptive group label if available, otherwise use the group name
+    const groupLabel = groupLabels[group] || group;
     groupDiv.innerHTML = `<h3>${groupLabel}</h3>`;
 
-    settingNames.forEach(name => {
+    settingsToDisplay[group].forEach(name => {
       if (currentSettings[group] && currentSettings[group][name]) {
         const setting = currentSettings[group][name];
-        const label = settingLabels[group][name] || name; // Use the descriptive label if available, otherwise use the setting name
+        const label = settingLabels[group][name] || name;
         const settingDiv = document.createElement('div');
         settingDiv.className = 'setting-item';
         settingDiv.innerHTML = `
@@ -148,14 +157,21 @@ function displaySettings() {
           <input type="text" id="${group}___${name}" value="${setting.value}" data-original-value="${setting.value}">
         `;
         groupDiv.appendChild(settingDiv);
-      } else {
-        console.warn(`Setting not found: ${group}.${name}`);
       }
     });
 
     container.appendChild(groupDiv);
+  });
+
+  // Add blur listener to algorithm input after it's created
+  const algorithmInput = document.getElementById('general___alg_code_str');
+  if (algorithmInput) {
+    algorithmInput.addEventListener('blur', (event) => {
+      if (!currentSettings) return;
+      currentSettings.general.alg_code_str.value = event.target.value;
+      displaySettings();
+    });
   }
-  
 }
 
 async function showDataFolder() {
@@ -311,10 +327,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
           console.error('Error loading result files:', error);
-          alert('An error was encountered while generating the report. Please ensure you are using a valid Job ID and dataset index.');
+          alert('An error was encountered while generating the report. Please ensure you are using a valid Job and dataset ID.');
         }
       } else {
-        alert('Please enter a jod identifier and dataset id before loading results.'+inputString + '--'+dataset_id  );
+        alert('Please enter a valid jod and dataset id before loading results. Current one is not valid:' + inputString + '-- ' + dataset_id  );
       }
     });
   }
@@ -919,15 +935,16 @@ document.getElementById('results-string').addEventListener('pointerdown', async 
     placeholderOption.selected = true;
     dropdown.appendChild(placeholderOption);
 
-    const uniqueNames = new Map();
+    // reuse the global uniqueNames map (clear then populate)
+    uniqueNames.clear();
     files.forEach(file => {
       if (!file.endsWith('.csv')) return;
       const parts = file.split('_');
       const displayName = parts.length > 4 ? parts.slice(0, parts.length - 4).join('_') : file;
-      const datasetIndex = parts[Math.max(0, parts.length - 4)];
-      const list = uniqueNames.get(displayName) || [];
-      list.push(datasetIndex);
-      uniqueNames.set(displayName, list);
+      // remove extension if any and trim
+      const datasetIndex = String(parts[Math.max(0, parts.length - 4)] || '').replace(/\..+$/, '').trim();
+      if (!uniqueNames.has(displayName)) uniqueNames.set(displayName, []);
+      uniqueNames.get(displayName).push(datasetIndex);
     });
 
     uniqueNames.forEach((value, key) => {
@@ -961,10 +978,7 @@ document.getElementById('results-string').addEventListener('change', (event) => 
       })
       text = text.slice(0,-2);
       
-      d_input.placeholder = `Valid indices: ${text}.`;
+      d_input.placeholder = `Valid IDs: ${text}.`;
       //alert(`You selected: ${selectedValue}`);
   }
 });
-
-
-
