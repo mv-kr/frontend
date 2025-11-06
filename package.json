@@ -3,11 +3,11 @@
   "version": "0.8.0",
   "main": "main.js",
   "scripts": {
-    "start": "electron .  --no-console",
-    "build": "electron-builder build --win --mac --linux",
-    "build:win": "electron-builder build --win",
-    "build:mac": "electron-builder build --mac",
-    "build:linux": "electron-builder build --linux"
+    "start": "electron . --no-console",
+    "build": "npm run sync-version && electron-builder build --mac --linux",
+    "build:mac": "npm run sync-version && electron-builder build --mac",
+    "build:linux": "npm run sync-version && electron-builder build --linux",
+    "sync-version": "node -e \"const { execSync } = require('child_process'); const tag = execSync('git describe --tags --abbrev=0').toString().trim().replace(/^v/, ''); const pkg = require('./package.json'); pkg.version = tag; require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\\n');\""
   },
   "keywords": [],
   "author": "",
@@ -85,7 +85,7 @@
   "description": "",
   "build": {
     "asar": false,
-    "appId": "UoE",
+    "appId": "uk.ac.exeter.hormoneBayes",
     "productName": "HormoneBayes",
     "directories": {
       "output": "dist"
