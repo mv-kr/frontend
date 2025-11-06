@@ -49,14 +49,32 @@ void parameter_parser::read_data(const std::string& str_file, const size_t rows_
         size_t max_dim = 0;
 
         std::string key;
+        
 
         while ( std::getline(in_file, line ) ) {
             
+            bool dataset_id_present = true;
             
             row_stream.clear();
             row_stream.str(line);
             
-            std::getline(row_stream, key, ',' ) ; // get dataset_id
+            std::string raw_first;
+            std::getline(row_stream, raw_first, ',' ) ; // get dataset_id
+
+            // Try to convert to number
+            try {
+                std::stod(raw_first);
+                // If successful, this is numeric data without ID
+                key = "dataset_" + std::to_string(data_map.size() + 1);
+                // Reset stream to include first value in data
+                row_stream.clear();
+                row_stream.str(line);
+                dataset_id_present = false;
+            } catch (std::exception&) {
+                // If conversion fails, treat as string ID
+                key = raw_first;
+            }    
+
 
             std::vector<double> v_tmp(0);
             try{
@@ -76,7 +94,8 @@ void parameter_parser::read_data(const std::string& str_file, const size_t rows_
                 row_stream.clear();
                 row_stream.str(line);
                 //skip dataset_id
-                std::getline(row_stream, key, ',' );
+                if (dataset_id_present)
+                    std::getline(row_stream, key, ',' );
                 //read data
                 std::vector<double> v_tmp2(0);
                 try {
