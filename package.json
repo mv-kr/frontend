@@ -4,7 +4,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron . --no-console",
-    "build": "npm run sync-version && electron-builder build --mac --linux",
+    "build": "npm run sync-version && electron-builder build --mac --win --linux",
     "build:mac": "npm run sync-version && electron-builder build --mac",
     "build:win": "npm run sync-version && electron-builder build --win",
     "build:linux": "npm run sync-version && electron-builder build --linux",
